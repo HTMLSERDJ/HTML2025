@@ -65,62 +65,180 @@ href="/" — переход на главную страницу.
   </ul>
 </div>
 ```
-Это обёртка для всей панели навигации.Атрибуты class указывают на стили Bootstrap:
-Сами пункты меню создаются по такой форме:
+Класс                        	Значение
+collapse navbar-collapse	    Позволяет сворачивать меню на маленьких экранах
+id="navbarNav"	              Идентификатор, связанный с data-bs-target в кнопке
+ul.navbar-nav	Список ссылок, отформатированный как навигационное меню
+ms-auto	Выравнивает список вправо (margin-start: auto)
+<h3>*Пометка*</h3>
+Если хотите выровнить по центру используйте style = 'margin-right...'
+Так же 
+
+justify-content-center — центрирует содержимое внутри flex-контейнера.
+
+Убираем ms-auto (иначе будет конфликт: margin-left: auto вытолкнет вправо).
+
+Список (ul.navbar-nav) остаётся без дополнительных отступов.
+
+<h2>Форма</h2>
+Ниже представлен контейнер который содержит внутри себя все обьекты и влияет на их внешний вид
+
 ```
-<li class="nav-item">
-  <a class="nav-link active" aria-current="page" href="/register.html">Название</a>
-</li>
+<div class="container mt-5" style="max-width: 30%;"> 
+</div>
 ```
-nav-item	    Элемент меню
-nav-link	    Стиль для ссылки в меню
-active	      Показывает, что страница активна (подсветка)
-aria-current	Помогает screen reader-у понимать текущую страницу
+container — центрирует форму и задаёт ширину.
+mt-5 — отступ сверху (margin-top: 3rem).
 
-
-
-
-
-
-
-
-
-
-
-Как изменить цвет шапки и текста 
-Свой собственный цвет через CSS
+Ниже форма которая отвечает за хранение внутри себя самих обьектов как кнопка поля для ввода и тд
 ```
-<style>
-  .custom-navbar {
-    background-color: #663399; /* фиолетовая шапка */
-     color: #bb4f4f;  /* фиолетовый текст */
-  }
-</style>
+ <form id="registerForm" novalidate>
+</form>
+```
+Дальше в саму форму необходимо вписать поля для ввода 
 
- <nav class="navbar navbar-expand-lg navbar-dark color_hat">
-    <div class="container-fluid">
-      <span class="navbar-brand mb-0 h1">Название сайта</span>
+Примеры
+
+```
+<div class="mb-3">
+      <label for="login" class="form-label">Логин</label>
+      <input type="text" class="form-control" id="login" required>
+      <div class="text-danger" id="loginError"></div>
     </div>
-  </nav>
-```
-Как уменьшить кнопку Зарегистрироваться и как уменьшить её размер?
 
-Чтобы уменьшить кнопку «Зарегистрироваться» в Bootstrap по размеру и ширине
-нужно учесть, что сейчас стоит w-100, то кнопка занимает всю ширину. Чтобы уменьшить ширину нужно:
-1. Убрать w-100
-2. ``` <button type="submit" class="btn btn-primary btn-sm" style="width: 150px;">Зарегистрироваться</button> ```
-Или если вам нужно тонко настроить — можно так:
-```
-<style>
-  .small-button {
-    font-size: 14px;
-    padding: 6px 12px;
-    width: auto; /* или укажи точно */
-  }
-</style>
 
-<button class="btn btn-primary small-button">Зарегистрироваться</button>
-```
-В файле Authorization form в принципе все тоже самое!
+<div class="mb-3">
+      <label for="password" class="form-label">Пароль</label>
+      <input type="password" class="form-control" id="password" required minlength="4">
+      <div class="text-danger" id="passwordError"></div>
+    </div>
 
-Остальные файлы похожи, поэтому думаю мы можем перейти к БД
+
+    <div class="mb-3">
+      <label for="fullName" class="form-label">ФИО</label>
+      <input type="text" class="form-control" id="fullName" required>
+      <div class="text-danger" id="fullNameError"></div>
+    </div>
+
+    <div class="mb-3">
+      <label for="phone" class="form-label">Телефон</label>
+      <input type="text" class="form-control" id="phone" placeholder="+7(XXX)-XXX-XX-XX" required>
+      <div class="text-danger" id="phoneError"></div>
+    </div>
+
+    <div class="mb-3">
+      <label for="email" class="form-label">Email</label>
+      <input type="email" class="form-control" id="email" required>
+      <div class="text-danger" id="emailError"></div>
+    </div>
+
+    <button type="submit" style="margin-left: 37%;" class="btn btn-primary">Зарегистрироваться</button>
+```
+Можно менять такие формы и требовать разнообразные данные
+
+1.  container mt-5
+container — центрирует форму и задаёт ширину.
+
+mt-5 — отступ сверху (margin-top: 3rem).
+
+2.  form-label и form-control
+form-label — красиво стилизованный заголовок поля.
+
+form-control — сам элемент ввода (input), растягивается на всю ширину.
+
+3.  required, minlength, type
+HTML-валидация:
+
+required — поле обязательно.
+
+minlength="4" — минимум 4 символа (для пароля).
+
+type="email" — браузер сам проверит, что email в правильном формате.
+
+placeholder — показывает пример ввода (например, телефон).
+
+4.  ```<div class="text-danger" id="...Error">```
+Это блоки, куда JavaScript будет выводить сообщения об ошибках валидации.
+Класс text-danger делает текст красным (Bootstrap стиль для ошибок).
+
+<h2>База данных</h2>
+1. Структура проекта
+project/
+├── server.js
+├── routes/
+│   └── auth.js
+├── models/
+│   └── userModel.js
+├── db.js
+├── package.json
+2.
+
+```
+npm install express pg bcrypt body-parser
+```
+3. Нужно создать файл подключения к bd 
+```
+const { Pool } = require('pg');
+
+const pool = new Pool({
+  user: 'postgres',
+  host: 'localhost',
+  database: 'your_db_name',
+  password: 'your_password',
+  port: 5432,
+});
+
+module.exports = pool;
+```
+И сам sql запрос
+```
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,                                -- Уникальный ID
+  login VARCHAR(50) UNIQUE NOT NULL,                    -- Уникальный логин
+  password_hash TEXT NOT NULL,                          -- Захэшированный пароль
+  full_name VARCHAR(100) NOT NULL,                      -- ФИО
+  phone VARCHAR(20) NOT NULL CHECK (
+    phone ~ '^\+7\(\d{3}\)-\d{3}-\d{2}-\d{2}$'           -- Маска номера
+  ),
+  email VARCHAR(100) UNIQUE NOT NULL CHECK (
+    email ~ '^[^@\s]+@[^@\s]+\.[^@\s]+$'                 -- Простая email-валидация
+  ),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP        -- Дата регистрации
+);
+```
+4. Создаем модель  (userModel.js в папку models )
+   Подключаем файл db
+```
+const pool = require('../db');
+```
+Функция для создания нового пользователя в таблице users c SQL-запросом для добавления нового пользователя.
+```
+async function createUser({ login, passwordHash, fullName, phone, email }) {
+  const query = 
+    INSERT INTO users (login, password_hash, full_name, phone, email)
+    VALUES ($1, $2, $3, $4, $5)
+    RETURNING id, login, email
+  ;
+```
+Ниже нужно добавить массив значений для 1-5
+```  const values = [login, passwordHash, fullName, phone, email]; ```
+После выполнение запроса 
+```
+  const result = await pool.query(query, values);
+  return result.rows[0];
+```
+Так же нужно добавить функцию занят ли логин или почта 
+```
+ const result = await pool.query(
+    `SELECT 1 FROM users WHERE login = $1 OR email = $2`,
+    [login, email]
+  );
+  return result.rowCount > 0;
+}
+```
+Экспорт функций для использования в других модулях 
+```
+module.exports = { createUser, isLoginOrEmailTaken };
+```
+5. создаем роутер (auth.js в папку routes)
+
