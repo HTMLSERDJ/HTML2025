@@ -109,42 +109,51 @@ mt-5 — отступ сверху (margin-top: 3rem).
 ```
 Дальше в саму форму необходимо вписать поля для ввода 
 
-Примеры
+Пример формы
 
 ```
-<div class="mb-3">
-      <label for="login" class="form-label">Логин</label>
-      <input type="text" class="form-control" id="login" required>
-      <div class="text-danger" id="loginError"></div>
-    </div>
+ <div class="container form-container">
+    <h2 class="mb-4 text-center">Регистрация</h2>
+    <form id="registerForm" novalidate>
+      <div class="mb-3">
+        <label for="login" class="form-label">Логин</label>
+        <input type="text" class="form-control" id="login" required />
+        <div id="loginError" class="error-text"></div>
+      </div>
 
+      <div class="mb-3">
+        <label for="password" class="form-label">Пароль</label>
+        <input type="password" class="form-control" id="password" required />
+        <div id="passwordError" class="error-text"></div>
+      </div>
 
-<div class="mb-3">
-      <label for="password" class="form-label">Пароль</label>
-      <input type="password" class="form-control" id="password" required minlength="4">
-      <div class="text-danger" id="passwordError"></div>
-    </div>
+      <div class="mb-3">
+        <label for="fullname" class="form-label">ФИО</label>
+        <input type="text" class="form-control" id="fullname" required />
+        <div id="fullnameError" class="error-text"></div>
+      </div>
 
+      <div class="mb-3">
+        <label for="phone" class="form-label">Телефон</label>
+        <input type="text" class="form-control" id="phone" placeholder="+7(XXX)-XXX-XX-XX" required />
+        <div id="phoneError" class="error-text"></div>
+      </div>
 
-    <div class="mb-3">
-      <label for="fullName" class="form-label">ФИО</label>
-      <input type="text" class="form-control" id="fullName" required>
-      <div class="text-danger" id="fullNameError"></div>
-    </div>
+      <div class="mb-3">
+        <label for="email" class="form-label">Электронная почта</label>
+        <input type="email" class="form-control" id="email" required />
+        <div id="emailError" class="error-text"></div>
+      </div>
 
-    <div class="mb-3">
-      <label for="phone" class="form-label">Телефон</label>
-      <input type="text" class="form-control" id="phone" placeholder="+7(XXX)-XXX-XX-XX" required>
-      <div class="text-danger" id="phoneError"></div>
-    </div>
+      <div class="d-grid">
+        <button type="submit" class="btn btn-success">Зарегистрироваться</button>
+      </div>
 
-    <div class="mb-3">
-      <label for="email" class="form-label">Email</label>
-      <input type="email" class="form-control" id="email" required>
-      <div class="text-danger" id="emailError"></div>
-    </div>
+      <div id="submitError" class="error-text mt-3 text-center"></div>
+      <div id="successMessage" class="text-success mt-3 text-center"></div>
+    </form>
+  </div>
 
-    <button type="submit" style="margin-left: 37%;" class="btn btn-primary">Зарегистрироваться</button>
 ```
 Можно менять такие формы и требовать разнообразные данные
 
@@ -228,163 +237,197 @@ const pool = require('../db');
 Функция для создания нового пользователя в таблице users c SQL-запросом для добавления нового пользователя.
 ```
 async function createUser({ login, passwordHash, fullName, phone, email }) {
-  const query = 
+  const query = `
     INSERT INTO users (login, password_hash, full_name, phone, email)
     VALUES ($1, $2, $3, $4, $5)
-    RETURNING id, login, email
-  ;
+    RETURNING id, login, email`;
+  const values = [login, passwordHash, fullName, phone, email];
+  
+  try {
+    const result = await pool.query(query, values);
+    return result.rows[0];
+  } catch (err) {
+    console.error('Ошибка при создании пользователя:', err);
+    throw new Error('Ошибка базы данных');
+  }
+}
 ```
-Ниже нужно добавить массив значений для 1-5
-```  const values = [login, passwordHash, fullName, phone, email]; ```
-После выполнение запроса 
-```
-  const result = await pool.query(query, values);
-  return result.rows[0];
-```
+
 Так же нужно добавить функцию занят ли логин или почта 
 ```
- const result = await pool.query(
-    `SELECT 1 FROM users WHERE login = $1 OR email = $2`,
-    [login, email]
-  );
-  return result.rowCount > 0;
+ async function isLoginOrEmailTaken(login, email) {
+  try {
+    const result = await pool.query(
+      `SELECT 1 FROM users WHERE login = $1 OR email = $2`,
+      [login, email]
+    );
+    return result.rowCount > 0;
+  } catch (err) {
+    console.error('Ошибка при проверке логина/email:', err);
+    return false;
+  }
 }
 ```
 Экспорт функций для использования в других модулях 
 ```
 module.exports = { createUser, isLoginOrEmailTaken };
 ```
-5. создаем роутер (auth.js в папку routes)
-Импортируем подключение к базе данных PostgreSQL, настроенное в отдельном файле db.js.
+ <h2>создаем роутер (auth.js в папку routes)</h2>
+Импортируем подключение к базе данных PostgreSQL и тд.
+
 ```
-const pool = require('../db');
+const express = require('express');
+const bcrypt = require('bcrypt');
+const router = express.Router();
+const { createUser, isLoginOrEmailTaken } = require('../models/userModel');
+
 ```
-Функция для создания нового пользователя в таблице users c  SQL-запрос для добавления нового пользователя.
+создаем роутер с валидацией данных.
 ```
-async function createUser({ login, passwordHash, fullName, phone, email }) {
- const query = `
-    INSERT INTO users (login, password_hash, full_name, phone, email)
-    VALUES ($1, $2, $3, $4, $5)
-    RETURNING id, login, email
-  `;
+router.post('/register', async (req, res) => {
+  try {
+    const { login, password, fullname, phone, email } = req.body;
+
+    
+    if (!login || !password || !fullname || !phone || !email) {
+      return res.status(400).json({ message: 'Заполните все поля.' });
+    }
+
+    if (password.length < 4) {
+      return res.status(400).json({ message: 'Пароль должен быть не короче 4 символов.' });
+    }
+
+    if (!/^[А-Яа-яЁё\s]+$/.test(fullname)) {
+      return res.status(400).json({ message: 'ФИО должно содержать только кириллицу и пробелы' });
+    }
+
+    if (!/^\+7\(\d{3}\)-\d{3}-\d{2}-\d{2}$/.test(phone)) {
+      return res.status(400).json({ message: 'Телефон в формате +7(XXX)-XXX-XX-XX' });
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ message: 'Некорректный email' });
+    }
 ```
-Массив значений для подстановки в $1–$5.
+Проверка уникальности логина
 ```
- const values = [login, passwordHash, fullName, phone, email];
+  const exists = await isLoginOrEmailTaken(login, email);
+    if (exists) {
+      return res.status(409).json({ message: 'Такой логин или email уже используется.' });
+    }
 ```
-Выполняем запрос.
+   Хеширование пароля и создание пользователя
 ```
-  const result = await pool.query(query, values);
-  return result.rows[0];
-}
+   const passwordHash = await bcrypt.hash(password, 10);
+    const user = await createUser({ 
+      login, 
+      passwordHash, 
+      fullName: fullname,
+      phone, 
+      email 
+    });
 ```
-Функция для проверки, занят ли логин или email.
+Отправка сообщений и Экспортирт функции,  чтобы их можно было использовать в других модулях
 ```
-async function isLoginOrEmailTaken(login, email) {
-  const result = await pool.query(
-    SELECT 1 FROM users WHERE login = $1 OR email = $2,
-    [login, email]
-  );
-  return result.rowCount > 0;
-}
-```
-Экспортируем функции, чтобы их можно было использовать в других модулях
-```
-module.exports = { createUser, isLoginOrEmailTaken };
+ res.status(201).json({ message: 'Пользователь зарегистрирован', user });
+  } catch (err) {
+    console.error('Ошибка при регистрации:', err);
+    res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+  }
+});
+
+module.exports = router;
 ```
 <h2>Скрипт файла регистрации</h2>
 Возвращаемся к файлу RegistrationClowns.html который должен быть в папке public
-В нем нужно сделать следующий скрипт который будет состоять из необходимых строг кода
-<div>Получаем элемент формы регистрации по id="registerForm".</div>
-
+Для начала подключите все скрипты и откройте тег <script>
+  
 ```
-const form = document.getElementById('registerForm');
- form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      // Очистка сообщений
-      ['login', 'password', 'fullname', 'phone', 'email', 'submit'].forEach(id =>
-        document.getElementById(id + 'Error').innerText = ''
-      );
-      document.getElementById('successMessage').innerText = '';
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+ <script>
 
 ```
 Считывание значений полей формы
 ```
-Перед открывающимся тегом <script>
- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-<script>
+ const form = document.getElementById('registerForm');
 
-const login = document.getElementById('login').value.trim();
-const password = document.getElementById('password').value.trim();
-const fullname = document.getElementById('fullname').value.trim();
-const phone = document.getElementById('phone').value.trim();
-const email = document.getElementById('email').value.trim();
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
 ```
-Валидация данных
+Очистка сообщений и получение данных  
 ```
-let hasError = false;
+['login', 'password', 'fullname', 'phone', 'email', 'submit'].forEach(id =>
+      document.getElementById(id + 'Error').innerText = ''
+    );
+    document.getElementById('successMessage').innerText = '';
+
+    const login = document.getElementById('login').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const fullname = document.getElementById('fullname').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const email = document.getElementById('email').value.trim();
+
+    let hasError = false;
 ```
 Так же нужно добавить следующие проверки
 Проверка, что логин не пустой,Пароль должен быть не короче 4 символов,ФИО должно содержать только кириллицу и пробелы,Телефон строго в формате +7(XXX)-XXX-XX-XX,Проверка email — базовая валидация по шаблону.
 
 ```
+ if (!login) {
+      document.getElementById('loginError').innerText = 'Введите логин';
+      hasError = true;
+    }
 
-      if (!login) {
-        document.getElementById('loginError').innerText = 'Введите логин';
-        hasError = true;
+    if (password.length < 4) {
+      document.getElementById('passwordError').innerText = 'Пароль должен быть не менее 4 символов';
+      hasError = true;
+    }
+
+    if (!/^[А-Яа-яЁё\s]+$/.test(fullname)) {
+      document.getElementById('fullnameError').innerText = 'ФИО должно содержать только кириллицу и пробелы';
+      hasError = true;
+    }
+
+    if (!/^\+7\(\d{3}\)-\d{3}-\d{2}-\d{2}$/.test(phone)) {
+      document.getElementById('phoneError').innerText = 'Формат: +7(XXX)-XXX-XX-XX';
+      hasError = true;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      document.getElementById('emailError').innerText = 'Неверный формат почты';
+      hasError = true;
+    }
+
+    if (hasError) return;
+
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ login, password, fullname, phone, email })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        document.getElementById('successMessage').innerText = 'Регистрация прошла успешно!';
+        form.reset();
+      } else {
+        console.log('Ошибка с сервера:', data); // ⬅️ ВСТАВЬ ЭТУ СТРОЧКУ
+        document.getElementById('submitError').innerText = data.message || 'Ошибка при регистрации';
       }
-
-      if (password.length < 4) {
-        document.getElementById('passwordError').innerText = 'Пароль должен быть не менее 4 символов';
-        hasError = true;
-      }
-
-      if (!/^[А-Яа-яЁё\s]+$/.test(fullname)) {
-        document.getElementById('fullnameError').innerText = 'ФИО должно содержать только кириллицу и пробелы';
-        hasError = true;
-      }
-
-      if (!/^\+7\(\d{3}\)-\d{3}-\d{2}-\d{2}$/.test(phone)) {
-        document.getElementById('phoneError').innerText = 'Формат: +7(XXX)-XXX-XX-XX';
-        hasError = true;
-      }
-
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        document.getElementById('emailError').innerText = 'Неверный формат почты';
-        hasError = true;
-      }
+    } catch (err) {
+      document.getElementById('submitError').innerText = 'Сервер недоступен';
+    }
+  });
 ```
-Если есть хотя бы одна ошибка — выходим
-
+Использование маски для телефона
 ```
-   if (hasError) return;
-```
-Отправка данных на сервер и обработка ответа от сервера
-```
-try {
-        const res = await fetch('/api/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ login, password, fullname, phone, email })
-        });
-
-        const data = await res.json();
-```
-Если прошло или не прошло упешно:
-```
- if (res.ok) {
-          document.getElementById('successMessage').innerText = 'Регистрация прошла успешно!';
-          form.reset();
-        } else {
-          document.getElementById('submitError').innerText = data.message || 'Ошибка при регистрации';
-        }
-      } catch (err) {
-        document.getElementById('submitError').innerText = 'Сервер недоступен';
-      }
-    });
+ $(document).ready(function () {
+    $('#phone').mask('+7(000)-000-00-00');
+  });
 ```
 <h2>Создание сервера server.js</h2>
 нам необходимо в начале кода указать
