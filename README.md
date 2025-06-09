@@ -418,6 +418,12 @@ const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+   });
+
+  $(document).ready(function () {
+    $('#phone').mask('+7(000)-000-00-00');
+  });
+
 ```
 <h2>Осталось установить express и инициализировать проект</h2>
 Нужно ввести в корень проекта
