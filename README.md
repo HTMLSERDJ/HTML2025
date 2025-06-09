@@ -65,6 +65,18 @@ href="/" — переход на главную страницу.
   </ul>
 </div>
 ```
+Внутри этого блока можно разместить ссылки к примеру
+```
+<li class="nav-item">
+            <a class="nav-link" href="/">Главная</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="/register.html">Регистрация</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/login.html">Вход</a>
+          </li>
+```
 Класс                        	Значение
 collapse navbar-collapse	    Позволяет сворачивать меню на маленьких экранах
 id="navbarNav"	              Идентификатор, связанный с data-bs-target в кнопке
@@ -176,7 +188,8 @@ project/
 ```
 npm install express pg bcrypt body-parser
 ```
-3. Нужно создать файл подключения к bd 
+3. Нужно создать файл подключения к bd
+   <h2>db.js</h2>
 ```
 const { Pool } = require('pg');
 
@@ -206,7 +219,8 @@ CREATE TABLE users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP        -- Дата регистрации
 );
 ```
-4. Создаем модель  (userModel.js в папку models )
+<h2>4. Создаем модель  (userModel.js в папку models )</h2>
+
    Подключаем файл db
 ```
 const pool = require('../db');
@@ -241,4 +255,177 @@ async function createUser({ login, passwordHash, fullName, phone, email }) {
 module.exports = { createUser, isLoginOrEmailTaken };
 ```
 5. создаем роутер (auth.js в папку routes)
+Импортируем подключение к базе данных PostgreSQL, настроенное в отдельном файле db.js.
+```
+const pool = require('../db');
+```
+Функция для создания нового пользователя в таблице users c  SQL-запрос для добавления нового пользователя.
+```
+async function createUser({ login, passwordHash, fullName, phone, email }) {
+ const query = `
+    INSERT INTO users (login, password_hash, full_name, phone, email)
+    VALUES ($1, $2, $3, $4, $5)
+    RETURNING id, login, email
+  `;
+```
+Массив значений для подстановки в $1–$5.
+```
+ const values = [login, passwordHash, fullName, phone, email];
+```
+Выполняем запрос.
+```
+  const result = await pool.query(query, values);
+  return result.rows[0];
+}
+```
+Функция для проверки, занят ли логин или email.
+```
+async function isLoginOrEmailTaken(login, email) {
+  const result = await pool.query(
+    SELECT 1 FROM users WHERE login = $1 OR email = $2,
+    [login, email]
+  );
+  return result.rowCount > 0;
+}
+```
+Экспортируем функции, чтобы их можно было использовать в других модулях
+```
+module.exports = { createUser, isLoginOrEmailTaken };
+```
+<h2>Скрипт файла регистрации</h2>
+Возвращаемся к файлу RegistrationClowns.html который должен быть в папке public
+В нем нужно сделать следующий скрипт который будет состоять из необходимых строг кода
+<div>Получаем элемент формы регистрации по id="registerForm".</div>
 
+```
+const form = document.getElementById('registerForm');
+ form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // Очистка сообщений
+      ['login', 'password', 'fullname', 'phone', 'email', 'submit'].forEach(id =>
+        document.getElementById(id + 'Error').innerText = ''
+      );
+      document.getElementById('successMessage').innerText = '';
+
+```
+Считывание значений полей формы
+```
+Перед открывающимся тегом <script>
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+<script>
+
+const login = document.getElementById('login').value.trim();
+const password = document.getElementById('password').value.trim();
+const fullname = document.getElementById('fullname').value.trim();
+const phone = document.getElementById('phone').value.trim();
+const email = document.getElementById('email').value.trim();
+```
+Валидация данных
+```
+let hasError = false;
+```
+Так же нужно добавить следующие проверки
+Проверка, что логин не пустой,Пароль должен быть не короче 4 символов,ФИО должно содержать только кириллицу и пробелы,Телефон строго в формате +7(XXX)-XXX-XX-XX,Проверка email — базовая валидация по шаблону.
+
+```
+
+      if (!login) {
+        document.getElementById('loginError').innerText = 'Введите логин';
+        hasError = true;
+      }
+
+      if (password.length < 4) {
+        document.getElementById('passwordError').innerText = 'Пароль должен быть не менее 4 символов';
+        hasError = true;
+      }
+
+      if (!/^[А-Яа-яЁё\s]+$/.test(fullname)) {
+        document.getElementById('fullnameError').innerText = 'ФИО должно содержать только кириллицу и пробелы';
+        hasError = true;
+      }
+
+      if (!/^\+7\(\d{3}\)-\d{3}-\d{2}-\d{2}$/.test(phone)) {
+        document.getElementById('phoneError').innerText = 'Формат: +7(XXX)-XXX-XX-XX';
+        hasError = true;
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        document.getElementById('emailError').innerText = 'Неверный формат почты';
+        hasError = true;
+      }
+```
+Если есть хотя бы одна ошибка — выходим
+
+```
+   if (hasError) return;
+```
+Отправка данных на сервер и обработка ответа от сервера
+```
+try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ login, password, fullname, phone, email })
+        });
+
+        const data = await res.json();
+```
+Если прошло или не прошло упешно:
+```
+ if (res.ok) {
+          document.getElementById('successMessage').innerText = 'Регистрация прошла успешно!';
+          form.reset();
+        } else {
+          document.getElementById('submitError').innerText = data.message || 'Ошибка при регистрации';
+        }
+      } catch (err) {
+        document.getElementById('submitError').innerText = 'Сервер недоступен';
+      }
+    });
+```
+<h2>Создание сервера server.js</h2>
+нам необходимо в начале кода указать
+
+```
+const express = require('express');
+const bodyParser = require('body-parser');
+```
+express — основной фреймворк для создания сервера.
+body-parser — библиотека для разбора тела запросов в формате JSON.
+<div>После этого создаём экземпляр Express-приложения — объект app, с помощью которого настраивается поведение сервера.</div>
+
+```
+const app = express();
+```
+Подключение маршрутов
+```
+const authRoutes = require('./routes/auth');
+```
+Middleware — настройки
+
+```
+app.use(bodyParser.json());
+app.use(express.static('public'));
+app.use('/api', authRoutes);
+```
+Запуск сервера
+
+```
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
+```
+<h2>Осталось установить express и инициализировать проект</h2>
+Нужно ввести в корень проекта
+
+```
+npm init -y
+npm install express
+npm install body-parser
+npm install bcrypt
+npm install pg
+```
