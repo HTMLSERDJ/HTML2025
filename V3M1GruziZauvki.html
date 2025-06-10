@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Грузовозофф - Портал грузоперевозок</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-top: 56px;
+        }
+        
+        .navbar {
+            background-color: var(--primary-color) !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .section {
+            display: none;
+            padding: 2rem 0;
+            min-height: calc(100vh - 56px);
+        }
+        
+        .active-section {
+            display: block;
+        }
+        
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+        
+        .btn-danger {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+        
+        .form-control:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+        }
+        
+        .table-responsive {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .table th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 3rem;
+            margin-bottom: 2rem;
+        }
+        
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .status-pending {
+            background-color: #f39c12;
+            color: white;
+        }
+        
+        .status-approved {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .status-rejected {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .footer {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1.5rem 0;
+            margin-top: 2rem;
+        }
+        
+        .nav-tabs .nav-link.active {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+        }
+        
+        .nav-tabs .nav-link {
+            color: var(--dark-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Навигационная панель -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-truck"></i> Грузовозофф
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#home">Главная</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#orders">Мои заявки</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#new-order">Новая заявка</a>
+                    </li>
+                    <li class="nav-item d-none" id="admin-nav-item">
+                        <a class="nav-link" href="#admin">Администрирование</a>
+                    </li>
+                </ul>
+                <div class="d-flex" id="auth-buttons">
+                    <button class="btn btn-outline-light me-2" onclick="showSection('login')">Войти</button>
+                    <button class="btn btn-light" onclick="showSection('register')">Регистрация</button>
+                </div>
+                <div class="d-none" id="user-info">
+                    <span class="navbar-text me-3" id="username-display"></span>
+                    <button class="btn btn-outline-light" onclick="logout()">Выйти</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Главная страница -->
+    <section id="home" class="section active-section">
+        <div class="container">
+            <div class="hero-section text-center">
+                <h1 class="display-4 fw-bold">Грузоперевозки по всей России</h1>
+                <p class="lead">Надёжно, быстро и выгодно</p>
+                <div class="mt-4">
+                    <button class="btn btn-light btn-lg me-2" onclick="showSection('new-order')">Оформить заявку</button>
+                    <button class="btn btn-outline-light btn-lg" onclick="showSection('orders')">Мои заявки</button>
+                </div>
+            </div>
+
+            <div class="row mt-5">
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="feature-icon">
+                                <i class="bi bi-clock-history"></i>
+                            </div>
+                            <h5 class="card-title">Быстрое оформление</h5>
+                            <p class="card-text">Оформите заявку на перевозку груза всего за несколько минут</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="feature-icon">
+                                <i class="bi bi-shield-check"></i>
+                            </div>
+                            <h5 class="card-title">Надёжность</h5>
+                            <p class="card-text">Ваш груз в надёжных руках профессионалов</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="feature-icon">
+                                <i class="bi bi-graph-up"></i>
+                            </div>
+                            <h5 class="card-title">Отслеживание</h5>
+                            <p class="card-text">Контролируйте статус вашей заявки в любое время</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5>Как это работает?</h5>
+                        </div>
+                        <div class="card-body">
+                            <ol>
+                                <li>Зарегистрируйтесь на портале</li>
+                                <li>Оформите заявку на перевозку</li>
+                                <li>Дождитесь подтверждения администратором</li>
+                                <li>Следите за выполнением заявки</li>
+                                <li>Получите ваш груз в целости и сохранности</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5>Наши преимущества</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul>
+                                <li>Гибкая система тарифов</li>
+                                <li>Любые типы грузов</li>
+                                <li>Перевозки по всей территории России</li>
+                                <li>Круглосуточная поддержка</li>
+                                <li>Страхование грузов</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Страница регистрации -->
+    <section id="register" class="section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8 col-lg-6">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white text-center">
+                            <h3>Регистрация</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="registration-form">
+                                <div class="mb-3">
+                                    <label for="reg-fullname" class="form-label">ФИО</label>
+                                    <input type="text" class="form-control" id="reg-fullname" required>
+                                    <div class="invalid-feedback">Пожалуйста, введите ваше ФИО</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="reg-phone" class="form-label">Телефон</label>
+                                    <input type="tel" class="form-control" id="reg-phone" placeholder="+7(999)-999-99-99" required>
+                                    <div class="invalid-feedback">Пожалуйста, введите телефон в формате +7(XXX)-XXX-XX-XX</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="reg-email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="reg-email" required>
+                                    <div class="invalid-feedback">Пожалуйста, введите корректный email</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="reg-login" class="form-label">Логин</label>
+                                    <input type="text" class="form-control" id="reg-login" minlength="6" required>
+                                    <div class="invalid-feedback">Логин должен содержать минимум 6 символов</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="reg-password" class="form-label">Пароль</label>
+                                    <input type="password" class="form-control" id="reg-password" minlength="6" required>
+                                    <div class="invalid-feedback">Пароль должен содержать минимум 6 символов</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="reg-confirm-password" class="form-label">Подтвердите пароль</label>
+                                    <input type="password" class="form-control" id="reg-confirm-password" required>
+                                    <div class="invalid-feedback">Пароли не совпадают</div>
+                                </div>
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+                                </div>
+                            </form>
+                            <div class="mt-3 text-center">
+                                <p>Уже зарегистрированы? <a href="#" onclick="showSection('login')">Войти</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Страница авторизации -->
+    <section id="login" class="section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8 col-lg-6">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white text-center">
+                            <h3>Авторизация</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="login-form">
+                                <div class="mb-3">
+                                    <label for="login-username" class="form-label">Логин</label>
+                                    <input type="text" class="form-control" id="login-username" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="login-password" class="form-label">Пароль</label>
+                                    <input type="password" class="form-control" id="login-password" required>
+                                </div>
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary">Войти</button>
+                                </div>
+                            </form>
+                            <div class="mt-3 text-center">
+                                <p>Нет аккаунта? <a href="#" onclick="showSection('register')">Зарегистрироваться</a></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Страница заявок пользователя -->
+    <section id="orders" class="section">
+        <div class="container">
+            <h2 class="mb-4">Мои заявки</h2>
+            <div class="alert alert-info" id="no-orders-message">
+                У вас пока нет заявок. <a href="#" onclick="showSection('new-order')">Создать новую заявку</a>
+            </div>
+            <div class="table-responsive d-none" id="orders-table-container">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>№</th>
+                            <th>Дата и время</th>
+                            <th>Тип груза</th>
+                            <th>Вес (кг)</th>
+                            <th>Откуда</th>
+                            <th>Куда</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-list">
+                        <!-- Заявки будут добавляться с помощью JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Страница создания новой заявки -->
+    <section id="new-order" class="section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-10">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white text-center">
+                            <h3>Новая заявка на перевозку</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="order-form">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="order-date" class="form-label">Дата и время перевозки</label>
+                                        <input type="datetime-local" class="form-control" id="order-date" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="order-weight" class="form-label">Вес груза (кг)</label>
+                                        <input type="number" class="form-control" id="order-weight" min="1" required>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="order-dimensions" class="form-label">Габариты груза (Д×Ш×В, м)</label>
+                                        <input type="text" class="form-control" id="order-dimensions" placeholder="1.5×0.8×0.9" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="order-type" class="form-label">Тип груза</label>
+                                        <select class="form-select" id="order-type" required>
+                                            <option value="">Выберите тип</option>
+                                            <option value="Бытовая техника">Бытовая техника</option>
+                                            <option value="Мебель">Мебель</option>
+                                            <option value="Строительные материалы">Строительные материалы</option>
+                                            <option value="Продукты питания">Продукты питания</option>
+                                            <option value="Одежда">Одежда</option>
+                                            <option value="Документы">Документы</option>
+                                            <option value="Другое">Другое</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="order-from" class="form-label">Адрес отправления</label>
+                                        <input type="text" class="form-control" id="order-from" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="order-to" class="form-label">Адрес доставки</label>
+                                        <input type="text" class="form-control" id="order-to" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="order-comments" class="form-label">Дополнительные комментарии</label>
+                                    <textarea class="form-control" id="order-comments" rows="3"></textarea>
+                                </div>
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary">Отправить заявку</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Панель администратора -->
+    <section id="admin" class="section">
+        <div class="container">
+            <h2 class="mb-4">Панель администратора</h2>
+            
+            <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders-tab-pane" type="button">Заявки</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users-tab-pane" type="button">Пользователи</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="adminTabContent">
+                <div class="tab-pane fade show active" id="orders-tab-pane">
+                    <div class="alert alert-info" id="no-admin-orders-message">
+                        Заявок на рассмотрение нет.
+                    </div>
+                    <div class="table-responsive d-none" id="admin-orders-table-container">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>№</th>
+                                    <th>Пользователь</th>
+                                    <th>Дата и время</th>
+                                    <th>Тип груза</th>
+                                    <th>Вес (кг)</th>
+                                    <th>Откуда</th>
+                                    <th>Куда</th>
+                                    <th>Статус</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-orders-list">
+                                <!-- Заявки будут добавляться с помощью JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="users-tab-pane">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Логин</th>
+                                    <th>ФИО</th>
+                                    <th>Телефон</th>
+                                    <th>Email</th>
+                                    <th>Заявок</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-list">
+                                <!-- Пользователи будут добавляться с помощью JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Футер -->
+    <footer class="footer mt-auto">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="bi bi-truck"></i> Грузовозофф</h5>
+                    <p>Надёжные грузоперевозки по всей России</p>
+                </div>
+                <div class="col-md-3">
+                    <h5>Контакты</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-telephone"></i> +7 (800) 123-45-67</li>
+                        <li><i class="bi bi-envelope"></i> info@gruzovozoff.ru</li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Режим работы</h5>
+                    <ul class="list-unstyled">
+                        <li>Пн-Пт: 9:00 - 18:00</li>
+                        <li>Сб: 10:00 - 16:00</li>
+                        <li>Вс: выходной</li>
+                    </ul>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center">
+                <p>&copy; 2024 Грузовозофф. Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Инициализация данных при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            // Инициализация хранилища, если оно пустое
+            initStorage();
+            
+            // Проверка авторизации пользователя
+            checkAuth();
+            
+            // Обработчики форм
+            setupEventListeners();
+            
+            // Инициализация табов администратора
+            const adminTabs = new bootstrap.Tab(document.getElementById('orders-tab'));
+        });
+
+        // Инициализация хранилища
+      function initStorage() {
+    let storedUsers = JSON.parse(localStorage.getItem('users')) || [];
+
+    // Гарантированно добавить админа
+    const adminExists = storedUsers.some(u => u.login === 'admin');
+    if (!adminExists) {
+        storedUsers.unshift({
+            id: 1,
+            login: 'admin',
+            password: 'gruzovik2024',
+            fullName: 'Администратор Системы',
+            phone: '+7(999)-111-22-33',
+            email: 'admin@gruzovozoff.ru'
+        });
+    }
+
+    localStorage.setItem('users', JSON.stringify(storedUsers));
+
+    if (!localStorage.getItem('orders')) {
+        localStorage.setItem('orders', JSON.stringify([]));
+    }
+}
+
+        // Проверка авторизации
+        function checkAuth() {
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+            if (currentUser) {
+                document.getElementById('auth-buttons').classList.add('d-none');
+                document.getElementById('user-info').classList.remove('d-none');
+                document.getElementById('username-display').textContent = currentUser.fullName;
+                
+                // Показать ссылку на админку, если это администратор
+                if (currentUser.login === 'admin') {
+                    document.getElementById('admin-nav-item').classList.remove('d-none');
+                }
+            }
+        }
+
+        // Настройка обработчиков событий
+        function setupEventListeners() {
+            // Форма регистрации
+            document.getElementById('registration-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                registerUser();
+            });
+            
+            // Форма входа
+            document.getElementById('login-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                loginUser();
+            });
+            
+            // Форма создания заявки
+            document.getElementById('order-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                createOrder();
+            });
+            
+            // Навигация
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const sectionId = this.getAttribute('href').substring(1);
+                    showSection(sectionId);
+                });
+            });
+        }
+
+        // Регистрация нового пользователя
+        function registerUser() {
+            const fullName = document.getElementById('reg-fullname').value;
+            const phone = document.getElementById('reg-phone').value;
+            const email = document.getElementById('reg-email').value;
+            const login = document.getElementById('reg-login').value;
+            const password = document.getElementById('reg-password').value;
+            const confirmPassword = document.getElementById('reg-confirm-password').value;
+            
+            // Простая валидация
+            if (password !== confirmPassword) {
+                alert('Пароли не совпадают');
+                return;
+            }
+            
+            if (login.length < 6) {
+                alert('Логин должен содержать не менее 6 символов');
+                return;
+            }
+            
+            if (password.length < 6) {
+                alert('Пароль должен содержать не менее 6 символов');
+                return;
+            }
+            
+            // Проверка уникальности логина
+            const users = JSON.parse(localStorage.getItem('users'));
+            const userExists = users.some(user => user.login === login);
+            
+            if (userExists) {
+                alert('Пользователь с таким логином уже существует');
+                return;
+            }
+            
+            // Создание нового пользователя
+            const newUser = {
+                id: Date.now(),
+                login: login,
+                password: password,
+                fullName: fullName,
+                phone: phone,
+                email: email
+            };
+            
+            // Сохранение пользователя
+            users.push(newUser);
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            // Автоматический вход
+            sessionStorage.setItem('currentUser', JSON.stringify(newUser));
+            checkAuth();
+            
+            // Переход на главную страницу
+            showSection('home');
+            alert('Регистрация прошла успешно!');
+        }
+
+        // Авторизация пользователя
+        function loginUser() {
+             initStorage();
+            const login = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            
+            const users = JSON.parse(localStorage.getItem('users'));
+            const user = users.find(u => u.login === login && u.password === password);
+            
+            if (user) {
+                sessionStorage.setItem('currentUser', JSON.stringify(user));
+                checkAuth();
+                showSection('home');
+                alert('Вы успешно авторизовались!');
+            } else {
+                alert('Неверный логин или пароль');
+            }
+        }
+
+        // Выход из системы
+        function logout() {
+            sessionStorage.removeItem('currentUser');
+            document.getElementById('auth-buttons').classList.remove('d-none');
+            document.getElementById('user-info').classList.add('d-none');
+            document.getElementById('admin-nav-item').classList.add('d-none');
+            showSection('home');
+        }
+
+        // Создание новой заявки
+        function createOrder() {
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+            if (!currentUser) {
+                alert('Для создания заявки необходимо авторизоваться');
+                showSection('login');
+                return;
+            }
+            
+            const date = document.getElementById('order-date').value;
+            const weight = document.getElementById('order-weight').value;
+            const dimensions = document.getElementById('order-dimensions').value;
+            const cargoType = document.getElementById('order-type').value;
+            const from = document.getElementById('order-from').value;
+            const to = document.getElementById('order-to').value;
+            const comments = document.getElementById('order-comments').value;
+            
+            // Создание заявки
+            const newOrder = {
+                id: Date.now(),
+                userId: currentUser.id,
+                userName: currentUser.fullName,
+                date: date,
+                weight: weight,
+                dimensions: dimensions,
+                cargoType: cargoType,
+                from: from,
+                to: to,
+                comments: comments,
+                status: 'pending',
+                createdAt: new Date().toISOString()
+            };
+            
+            // Сохранение заявки
+            const orders = JSON.parse(localStorage.getItem('orders'));
+            orders.push(newOrder);
+            localStorage.setItem('orders', JSON.stringify(orders));
+            
+            // Очистка формы
+            document.getElementById('order-form').reset();
+            
+            // Переход к списку заявок
+            showSection('orders');
+            alert('Заявка успешно создана и отправлена на рассмотрение!');
+        }
+
+        // Отображение заявок пользователя
+        function loadUserOrders() {
+            const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+            if (!currentUser) {
+                showSection('login');
+                return;
+            }
+            
+            const orders = JSON.parse(localStorage.getItem('orders'));
+            const userOrders = orders.filter(order => order.userId === currentUser.id);
+            
+            const ordersList = document.getElementById('orders-list');
+            ordersList.innerHTML = '';
+            
+            if (userOrders.length === 0) {
+                document.getElementById('no-orders-message').classList.remove('d-none');
+                document.getElementById('orders-table-container').classList.add('d-none');
+                return;
+            }
+            
+            document.getElementById('no-orders-message').classList.add('d-none');
+            document.getElementById('orders-table-container').classList.remove('d-none');
+            
+            userOrders.forEach((order, index) => {
+                const row = document.createElement('tr');
+                
+                // Форматирование даты
+                const orderDate = new Date(order.date);
+                const formattedDate = orderDate.toLocaleString('ru-RU', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                // Статус заявки
+                let statusClass, statusText;
+                switch(order.status) {
+                    case 'pending':
+                        statusClass = 'status-pending';
+                        statusText = 'На рассмотрении';
+                        break;
+                    case 'approved':
+                        statusClass = 'status-approved';
+                        statusText = 'Подтверждена';
+                        break;
+                    case 'rejected':
+                        statusClass = 'status-rejected';
+                        statusText = 'Отклонена';
+                        break;
+                    default:
+                        statusClass = 'status-pending';
+                        statusText = 'На рассмотрении';
+                }
+                
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${formattedDate}</td>
+                    <td>${order.cargoType}</td>
+                    <td>${order.weight}</td>
+                    <td>${order.from}</td>
+                    <td>${order.to}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                `;
+                ordersList.appendChild(row);
+            });
+        }
+
+        // Загрузка заявок для администратора
+        function loadAdminOrders() {
+            const orders = JSON.parse(localStorage.getItem('orders'));
+            const ordersList = document.getElementById('admin-orders-list');
+            ordersList.innerHTML = '';
+            
+            if (orders.length === 0) {
+                document.getElementById('no-admin-orders-message').classList.remove('d-none');
+                document.getElementById('admin-orders-table-container').classList.add('d-none');
+                return;
+            }
+            
+            document.getElementById('no-admin-orders-message').classList.add('d-none');
+            document.getElementById('admin-orders-table-container').classList.remove('d-none');
+            
+            orders.forEach((order, index) => {
+                const row = document.createElement('tr');
+                
+                // Форматирование даты
+                const orderDate = new Date(order.date);
+                const formattedDate = orderDate.toLocaleString('ru-RU', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                // Статус заявки
+                let statusClass, statusText;
+                switch(order.status) {
+                    case 'pending':
+                        statusClass = 'status-pending';
+                        statusText = 'На рассмотрении';
+                        break;
+                    case 'approved':
+                        statusClass = 'status-approved';
+                        statusText = 'Подтверждена';
+                        break;
+                    case 'rejected':
+                        statusClass = 'status-rejected';
+                        statusText = 'Отклонена';
+                        break;
+                    default:
+                        statusClass = 'status-pending';
+                        statusText = 'На рассмотрении';
+                }
+                
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${order.userName}</td>
+                    <td>${formattedDate}</td>
+                    <td>${order.cargoType}</td>
+                    <td>${order.weight}</td>
+                    <td>${order.from}</td>
+                    <td>${order.to}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="deleteOrder(${order.id})">
+                            <i class="bi bi-trash"></i> Удалить
+                        </button>
+                    </td>
+                `;
+                ordersList.appendChild(row);
+            });
+        }
+
+        // Загрузка пользователей для администратора
+        function loadUsers() {
+            const users = JSON.parse(localStorage.getItem('users'));
+            const orders = JSON.parse(localStorage.getItem('orders'));
+            
+            const usersList = document.getElementById('users-list');
+            usersList.innerHTML = '';
+            
+            users.forEach(user => {
+                if (user.login === 'admin') return; // Пропускаем администратора
+                
+                const userOrders = orders.filter(order => order.userId === user.id);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.login}</td>
+                    <td>${user.fullName}</td>
+                    <td>${user.phone}</td>
+                    <td>${user.email}</td>
+                    <td>${userOrders.length}</td>
+                `;
+                usersList.appendChild(row);
+            });
+        }
+
+        // Удаление заявки администратором
+        function deleteOrder(orderId) {
+            if (!confirm('Вы уверены, что хотите удалить эту заявку?')) return;
+            
+            const orders = JSON.parse(localStorage.getItem('orders'));
+            const updatedOrders = orders.filter(order => order.id !== orderId);
+            
+            localStorage.setItem('orders', JSON.stringify(updatedOrders));
+            loadAdminOrders();
+        }
+
+        // Переключение между разделами
+        function showSection(sectionId) {
+            // Скрыть все разделы
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active-section');
+            });
+            
+            // Показать выбранный раздел
+            document.getElementById(sectionId).classList.add('active-section');
+            
+            // Обновление данных при необходимости
+            switch(sectionId) {
+                case 'orders':
+                    loadUserOrders();
+                    break;
+                case 'admin':
+                    loadAdminOrders();
+                    loadUsers();
+                    break;
+            }
+            
+            // Прокрутка вверх
+            window.scrollTo(0, 0);
+        }
+    </script>
+</body>
+</html>
