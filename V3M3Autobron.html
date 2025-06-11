@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Эх, прокачу! - Бронирование автомобилей</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+        
+        .hero-section {
+            background: linear-gradient(rgba(67, 97, 238, 0.9), rgba(67, 97, 238, 0.7)), url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 100px 0;
+            margin-bottom: 50px;
+            border-radius: 0 0 30px 30px;
+        }
+        
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 25px;
+            overflow: hidden;
+            border: none;
+        }
+        
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            border: none;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary);
+            border-color: var(--secondary);
+            transform: scale(1.05);
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        .section-title {
+            position: relative;
+            margin-bottom: 40px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+        
+        .section-title:after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+        }
+        
+        .status-badge {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+        
+        .status-new {
+            background-color: #ffea00;
+            color: #333;
+        }
+        
+        .status-confirmed {
+            background-color: #4ade80;
+            color: white;
+        }
+        
+        .status-rejected {
+            background-color: #f87171;
+            color: white;
+        }
+        
+        .car-card img {
+            height: 180px;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+        
+        .car-card:hover img {
+            transform: scale(1.05);
+        }
+        
+        .car-card .card-body {
+            position: relative;
+        }
+        
+        .car-price {
+            position: absolute;
+            top: -25px;
+            right: 15px;
+            background: var(--primary);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 700;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .page-section {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .active-section {
+            display: block;
+        }
+        
+        .floating-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 100;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .app-table {
+            font-size: 0.9rem;
+        }
+        
+        .app-table th {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            max-width: 350px;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.5s;
+        }
+        
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .footer {
+            background: var(--dark);
+            color: white;
+            padding: 40px 0 20px;
+            margin-top: 60px;
+        }
+        
+        .login-container {
+            max-width: 450px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .admin-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Навигационная панель -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-car me-2"></i>Эх, прокачу!
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('home')">Главная</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('register')">Регистрация</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('login')">Войти</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('cars')">Автопарк</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Главная страница -->
+    <section id="home" class="page-section active-section">
+        <div class="hero-section text-center">
+            <div class="container">
+                <h1 class="display-4 fw-bold mb-4">Бронируйте автомобили онлайн</h1>
+                <p class="lead mb-5">Сервис "Эх, прокачу!" предлагает удобное бронирование автомобилей для любых целей</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <button class="btn btn-light btn-lg px-4 py-2" onclick="showSection('register')">
+                        <i class="fas fa-user-plus me-2"></i>Зарегистрироваться
+                    </button>
+                    <button class="btn btn-outline-light btn-lg px-4 py-2" onclick="showSection('cars')">
+                        <i class="fas fa-car me-2"></i>Выбрать авто
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row mb-5">
+                <div class="col-md-4 text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h4>Быстрое бронирование</h4>
+                    <p>Выберите автомобиль и забронируйте его за несколько минут</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-car-alt"></i>
+                    </div>
+                    <h4>Большой автопарк</h4>
+                    <p>Широкий выбор автомобилей различных классов</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <h4>Поддержка 24/7</h4>
+                    <p>Наша служба поддержки всегда готова помочь</p>
+                </div>
+            </div>
+
+            <h2 class="section-title text-center">Как это работает</h2>
+            
+            <div class="row mb-5">
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px; font-size: 1.8rem;">
+                                1
+                            </div>
+                            <h5 class="mt-3">Регистрация</h5>
+                            <p>Создайте аккаунт в нашей системе</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px; font-size: 1.8rem;">
+                                2
+                            </div>
+                            <h5 class="mt-3">Выбор авто</h5>
+                            <p>Выберите понравившийся автомобиль</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px; font-size: 1.8rem;">
+                                3
+                            </div>
+                            <h5 class="mt-3">Бронирование</h5>
+                            <p>Укажите дату и оформите заявку</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px; font-size: 1.8rem;">
+                                4
+                            </div>
+                            <h5 class="mt-3">Получение авто</h5>
+                            <p>Заберите автомобиль в назначенный день</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mb-5">
+                <button class="btn btn-primary btn-lg px-5 py-3" onclick="showSection('register')">
+                    Начать бронирование <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Страница регистрации -->
+    <section id="register" class="page-section">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header text-center py-3">
+                            <h3 class="mb-0"><i class="fas fa-user-plus me-2"></i>Регистрация</h3>
+                        </div>
+                        <div class="card-body p-4">
+                            <form id="registrationForm">
+                                <div class="row mb-3">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">ФИО <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" placeholder="Иванов Иван Иванович" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Телефон <span class="text-danger">*</span></label>
+                                        <input type="tel" class="form-control" placeholder="8(999)-999-99-99" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Email <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" placeholder="example@mail.ru" required>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Пароль <span class="text-danger">*</span></label>
+                                        <input type="password" class="form-control" placeholder="Минимум 6 символов" required>
+                                        <div class="form-text">Пароль должен содержать минимум 6 символов, включая цифры</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Подтверждение пароля <span class="text-danger">*</span></label>
+                                        <input type="password" class="form-control" placeholder="Повторите пароль" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="form-label">Серия и номер водительского удостоверения <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" placeholder="XX XXX XXX" required>
+                                </div>
+                                
+                                <div class="form-check mb-4">
+                                    <input class="form-check-input" type="checkbox" id="agreeTerms" required>
+                                    <label class="form-check-label" for="agreeTerms">
+                                        Я согласен с <a href="#">условиями использования</a> и <a href="#">политикой конфиденциальности</a>
+                                    </label>
+                                </div>
+                                
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary btn-lg py-3">
+                                        <i class="fas fa-user-check me-2"></i>Зарегистрироваться
+                                    </button>
+                                </div>
+                                
+                                <div class="text-center mt-4">
+                                    <p>Уже есть аккаунт? <a href="#" onclick="showSection('login')">Войти</a></p>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Страница авторизации -->
+    <section id="login" class="page-section">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="login-container">
+                        <div class="card-header text-center py-4 bg-primary text-white">
+                            <h3 class="mb-0"><i class="fas fa-sign-in-alt me-2"></i>Авторизация</h3>
+                        </div>
+                        <div class="card-body p-4">
+                            <form id="loginForm">
+                                <div class="mb-4">
+                                    <label class="form-label">Email <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" placeholder="example@mail.ru" required>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="form-label">Пароль <span class="text-danger">*</span></label>
+                                    <input type="password" class="form-control" placeholder="Введите пароль" required>
+                                    <div class="text-end mt-2">
+                                        <a href="#" class="text-decoration-none">Забыли пароль?</a>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-grid mb-3">
+                                    <button type="submit" class="btn btn-primary btn-lg py-3">
+                                        <i class="fas fa-sign-in-alt me-2"></i>Войти
+                                    </button>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <p>Еще не зарегистрированы? <a href="#" onclick="showSection('register')">Создать аккаунт</a></p>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Страница с автомобилями -->
+    <section id="cars" class="page-section">
+        <div class="container py-5">
+            <h2 class="section-title text-center mb-5">Наш автопарк</h2>
+            
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Поиск по модели...">
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <select class="form-select">
+                        <option selected>Все классы</option>
+                        <option>Эконом</option>
+                        <option>Средний</option>
+                        <option>Бизнес</option>
+                        <option>Премиум</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <select class="form-select">
+                        <option selected>Сортировать по</option>
+                        <option>Цена по возрастанию</option>
+                        <option>Цена по убыванию</option>
+                        <option>Год выпуска</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-4 col-md-6">
+                    <div class="card car-card">
+                        <img src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="Kia Rio">
+                        <div class="card-body">
+                            <span class="car-price">2 500 ₽/день</span>
+                            <h5 class="card-title">Kia Rio</h5>
+                            <p class="card-text">Компактный и экономичный автомобиль для города</p>
+                            <ul class="list-group list-group-flush mb-3">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Год выпуска:</span>
+                                    <span>2022</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Трансмиссия:</span>
+                                    <span>Автомат</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Двигатель:</span>
+                                    <span>1.6 л</span>
+                                </li>
+                            </ul>
+                            <button class="btn btn-primary w-100" onclick="showSection('new-application')">
+                                <i class="fas fa-calendar-check me-2"></i>Забронировать
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6">
+                    <div class="card car-card">
+                        <img src="https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="Hyundai Solaris">
+                        <div class="card-body">
+                            <span class="car-price">2 700 ₽/день</span>
+                            <h5 class="card-title">Hyundai Solaris</h5>
+                            <p class="card-text">Стильный и комфортный седан для повседневных поездок</p>
+                            <ul class="list-group list-group-flush mb-3">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Год выпуска:</span>
+                                    <span>2021</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Трансмиссия:</span>
+                                    <span>Автомат</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Двигатель:</span>
+                                    <span>1.6 л</span>
+                                </li>
+                            </ul>
+                            <button class="btn btn-primary w-100" onclick="showSection('new-application')">
+                                <i class="fas fa-calendar-check me-2"></i>Забронировать
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6">
+                    <div class="card car-card">
+                        <img src="https://images.unsplash.com/photo-1580273916550-e323be2ae537?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="Toyota Camry">
+                        <div class="card-body">
+                            <span class="car-price">4 500 ₽/день</span>
+                            <h5 class="card-title">Toyota Camry</h5>
+                            <p class="card-text">Комфортный бизнес-седан для деловых поездок</p>
+                            <ul class="list-group list-group-flush mb-3">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Год выпуска:</span>
+                                    <span>2023</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Трансмиссия:</span>
+                                    <span>Автомат</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Двигатель:</span>
+                                    <span>2.5 л</span>
+                                </li>
+                            </ul>
+                            <button class="btn btn-primary w-100" onclick="showSection('new-application')">
+                                <i class="fas fa-calendar-check me-2"></i>Забронировать
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6">
+                    <div class="card car-card">
+                        <img src="https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="Volkswagen Tiguan">
+                        <div class="card-body">
+                            <span class="car-price">4 800 ₽/день</span>
+                            <h5 class="card-title">Volkswagen Tiguan</h5>
+                            <p class="card-text">Просторный кроссовер для семейных поездок</p>
+                            <ul class="list-group list-group-flush mb-3">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Год выпуска:</span>
+                                    <span>2022</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Трансмиссия:</span>
+                                    <span>Автомат</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Двигатель:</span>
+                                    <span>2.0 л</span>
+                                </li>
+                            </ul>
+                            <button class="btn btn-primary w-100" onclick="showSection('new-application')">
+                                <i class="fas fa-calendar-check me-2"></i>Забронировать
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6">
+                    <div class="card car-card">
+                        <img src="https://images.unsplash.com/photo-1583121274602-3e2820c69888?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="BMW 5 Series">
+                        <div class="card-body">
+                            <span class="car-price">7 500 ₽/день</span>
+                            <h5 class="card-title">BMW 5 Series</h5>
+                            <p class="card-text">Премиальный седан с динамичными характеристиками</p>
+                            <ul class="list-group list-group-flush mb-3">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Год выпуска:</span>
+                                    <span>2023</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Трансмиссия:</span>
+                                    <span>Автомат</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Двигатель:</span>
+                                    <span>3.0 л</span>
+                                </li>
+                            </ul>
+                            <button class="btn btn-primary w-100" onclick="showSection('new-application')">
+                                <i class="fas fa-calendar-check me-2"></i>Забронировать
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 col-md-6">
+                    <div class="card car-card">
+                        <img src="https://images.unsplash.com/photo-1553440569-bcc63803a83d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" class="card-img-top" alt="Mercedes-Benz GLC">
+                        <div class="card-body">
+                            <span class="car-price">8 200 ₽/день</span>
+                            <h5 class="card-title">Mercedes-Benz GLC</h5>
+                            <p class="card-text">Роскошный кроссовер с высоким уровнем комфорта</p>
+                            <ul class="list-group list-group-flush mb-3">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Год выпуска:</span>
+                                    <span>2023</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Трансмиссия:</span>
+                                    <span>Автомат</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Двигатель:</span>
+                                    <span>2.0 л</span>
+                                </li>
+                            </ul>
+                            <button class="btn btn-primary w-100" onclick="showSection('new-application')">
+                                <i class="fas fa-calendar-check me-2"></i>Забронировать
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Страница создания новой заявки -->
+    <section id="new-application" class="page-section">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header text-center py-3">
+                            <h3 class="mb-0"><i class="fas fa-file-alt me-2"></i>Новая заявка на бронирование</h3>
+                        </div>
+                        <div class="card-body p-4">
+                            <form id="applicationForm">
+                                <div class="mb-4">
+                                    <label class="form-label">Выберите автомобиль <span class="text-danger">*</span></label>
+                                    <select class="form-select" required>
+                                        <option selected disabled>Выберите автомобиль</option>
+                                        <option>Kia Rio (2022) - 2 500 ₽/день</option>
+                                        <option>Hyundai Solaris (2021) - 2 700 ₽/день</option>
+                                        <option>Toyota Camry (2023) - 4 500 ₽/день</option>
+                                        <option>Volkswagen Tiguan (2022) - 4 800 ₽/день</option>
+                                        <option>BMW 5 Series (2023) - 7 500 ₽/день</option>
+                                        <option>Mercedes-Benz GLC (2023) - 8 200 ₽/день</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="row mb-4">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Дата начала аренды <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Дата окончания аренды <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="form-label">Дополнительные услуги</label>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="childSeat">
+                                        <label class="form-check-label" for="childSeat">
+                                            Детское кресло (+500 ₽/день)
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="gps">
+                                        <label class="form-check-label" for="gps">
+                                            Навигационная система (+300 ₽/день)
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="insurance">
+                                        <label class="form-check-label" for="insurance">
+                                            Полная страховка (+1 000 ₽/день)
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-info">
+                                    <h5><i class="fas fa-info-circle me-2"></i>Итоговая стоимость</h5>
+                                    <div class="d-flex justify-content-between fs-4 fw-bold mt-3">
+                                        <span>Сумма:</span>
+                                        <span>11 200 ₽</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-grid mt-4">
+                                    <button type="submit" class="btn btn-primary btn-lg py-3">
+                                        <i class="fas fa-paper-plane me-2"></i>Отправить заявку
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Страница заявок пользователя -->
+    <section id="user-applications" class="page-section">
+        <div class="container py-5">
+            <h2 class="section-title text-center mb-5">Мои заявки</h2>
+            
+            <div class="d-flex justify-content-end mb-4">
+                <button class="btn btn-primary" onclick="showSection('new-application')">
+                    <i class="fas fa-plus me-2"></i>Новая заявка
+                </button>
+            </div>
+            
+            <div class="card">
+                <div class="card-header py-3">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>История заявок</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover app-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Автомобиль</th>
+                                    <th>Дата бронирования</th>
+                                    <th>Статус</th>
+                                    <th>Стоимость</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" class="rounded me-3" width="60" alt="Kia Rio">
+                                            <div>
+                                                <div class="fw-bold">Kia Rio</div>
+                                                <div class="text-muted small">Эконом класс</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>15.08.2023 - 18.08.2023</td>
+                                    <td><span class="status-badge status-confirmed">Подтверждено</span></td>
+                                    <td>7 500 ₽</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-info-circle"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="https://images.unsplash.com/photo-1583121274602-3e2820c69888?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" class="rounded me-3" width="60" alt="BMW 5 Series">
+                                            <div>
+                                                <div class="fw-bold">BMW 5 Series</div>
+                                                <div class="text-muted small">Премиум класс</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>22.08.2023 - 25.08.2023</td>
+                                    <td><span class="status-badge status-new">Новая</span></td>
+                                    <td>22 500 ₽</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-info-circle"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="https://images.unsplash.com/photo-1580273916550-e323be2ae537?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" class="rounded me-3" width="60" alt="Toyota Camry">
+                                            <div>
+                                                <div class="fw-bold">Toyota Camry</div>
+                                                <div class="text-muted small">Бизнес класс</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>05.07.2023 - 10.07.2023</td>
+                                    <td><span class="status-badge status-confirmed">Подтверждено</span></td>
+                                    <td>22 500 ₽</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-info-circle"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" class="rounded me-3" width="60" alt="Volkswagen Tiguan">
+                                            <div>
+                                                <div class="fw-bold">Volkswagen Tiguan</div>
+                                                <div class="text-muted small">Средний класс</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>28.06.2023 - 30.06.2023</td>
+                                    <td><span class="status-badge status-rejected">Отклонено</span></td>
+                                    <td>14 400 ₽</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-info-circle"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Панель администратора -->
+    <section id="admin" class="page-section">
+        <div class="container py-5">
+            <h2 class="section-title text-center mb-5">Панель администратора</h2>
+            
+            <div class="admin-section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4><i class="fas fa-tasks me-2"></i>Управление заявками</h4>
+                    <div class="d-flex gap-2">
+                        <input type="text" class="form-control" placeholder="Поиск по ФИО или телефону...">
+                        <button class="btn btn-outline-primary">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover app-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ФИО</th>
+                                        <th>Телефон</th>
+                                        <th>Email</th>
+                                        <th>Автомобиль</th>
+                                        <th>Дата бронирования</th>
+                                        <th>Статус</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Иванов Иван Иванович</td>
+                                        <td>8(999)-123-45-67</td>
+                                        <td>ivanov@example.com</td>
+                                        <td>BMW 5 Series</td>
+                                        <td>22.08.2023 - 25.08.2023</td>
+                                        <td><span class="status-badge status-new">Новая</span></td>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-sm btn-success">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Петров Петр Петрович</td>
+                                        <td>8(999)-765-43-21</td>
+                                        <td>petrov@example.com</td>
+                                        <td>Kia Rio</td>
+                                        <td>15.08.2023 - 18.08.2023</td>
+                                        <td><span class="status-badge status-confirmed">Подтверждено</span></td>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-sm btn-success" disabled>
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" disabled>
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Сидорова Анна Владимировна</td>
+                                        <td>8(999)-555-44-33</td>
+                                        <td>sidorova@example.com</td>
+                                        <td>Mercedes-Benz GLC</td>
+                                        <td>10.09.2023 - 15.09.2023</td>
+                                        <td><span class="status-badge status-new">Новая</span></td>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-sm btn-success">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Козлов Алексей Дмитриевич</td>
+                                        <td>8(999)-222-33-44</td>
+                                        <td>kozlov@example.com</td>
+                                        <td>Volkswagen Tiguan</td>
+                                        <td>28.06.2023 - 30.06.2023</td>
+                                        <td><span class="status-badge status-rejected">Отклонено</span></td>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-sm btn-success" disabled>
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" disabled>
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Николаева Екатерина Сергеевна</td>
+                                        <td>8(999)-888-77-66</td>
+                                        <td>nikolaeva@example.com</td>
+                                        <td>Toyota Camry</td>
+                                        <td>05.07.2023 - 10.07.2023</td>
+                                        <td><span class="status-badge status-confirmed">Подтверждено</span></td>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-sm btn-success" disabled>
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" disabled>
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div>
+                        <span>Показано 5 из 12 записей</span>
+                    </div>
+                    <nav>
+                        <ul class="pagination mb-0">
+                            <li class="page-item disabled"><a class="page-link" href="#">Назад</a></li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item"><a class="page-link" href="#">Вперед</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Уведомление -->
+    <div class="notification">
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <strong>Успешно!</strong> Заявка создана и отправлена на рассмотрение.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+
+    <!-- Плавающая кнопка -->
+    <button class="btn btn-primary floating-btn" onclick="showSection('home')">
+        <i class="fas fa-home"></i>
+    </button>
+
+    <!-- Подвал -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h5><i class="fas fa-car me-2"></i>Эх, прокачу!</h5>
+                    <p class="mt-3">Сервис для автоматизации процесса бронирования автомобилей. Удобно, быстро, надежно.</p>
+                </div>
+                <div class="col-md-2 mb-4">
+                    <h5>Навигация</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#" class="text-white text-decoration-none" onclick="showSection('home')">Главная</a></li>
+                        <li class="mb-2"><a href="#" class="text-white text-decoration-none" onclick="showSection('register')">Регистрация</a></li>
+                        <li class="mb-2"><a href="#" class="text-white text-decoration-none" onclick="showSection('cars')">Автопарк</a></li>
+                        <li><a href="#" class="text-white text-decoration-none" onclick="showSection('admin')">Администратору</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <h5>Контакты</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="fas fa-map-marker-alt me-2"></i> Москва, ул. Автомобильная, 15</li>
+                        <li class="mb-2"><i class="fas fa-phone me-2"></i> +7 (495) 123-45-67</li>
+                        <li class="mb-2"><i class="fas fa-envelope me-2"></i> info@eh-prokachy.ru</li>
+                    </ul>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <h5>Мы в соцсетях</h5>
+                    <div class="d-flex gap-3 mt-3">
+                        <a href="#" class="text-white fs-4"><i class="fab fa-vk"></i></a>
+                        <a href="#" class="text-white fs-4"><i class="fab fa-telegram"></i></a>
+                        <a href="#" class="text-white fs-4"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="mt-0 mb-4" style="background: rgba(255,255,255,0.2);">
+            <div class="text-center">
+                <p class="mb-0">&copy; 2023 Сервис "Эх, прокачу!". Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Показ/скрытие разделов
+        function showSection(sectionId) {
+            // Скрыть все разделы
+            document.querySelectorAll('.page-section').forEach(section => {
+                section.classList.remove('active-section');
+            });
+            
+            // Показать выбранный раздел
+            document.getElementById(sectionId).classList.add('active-section');
+            
+            // Прокрутка к началу страницы
+            window.scrollTo(0, 0);
+            
+            // Показать уведомление для демонстрации
+            if(sectionId === 'new-application') {
+                setTimeout(() => {
+                    document.querySelector('.notification').classList.add('show');
+                    setTimeout(() => {
+                        document.querySelector('.notification').classList.remove('show');
+                    }, 3000);
+                }, 1000);
+            }
+        }
+        
+        // Обработка форм
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            showSection('user-applications');
+        });
+        
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            showSection('user-applications');
+        });
+        
+        document.getElementById('applicationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            showSection('user-applications');
+        });
+        
+        // Имитация входа администратора
+        document.addEventListener('DOMContentLoaded', function() {
+            const adminLink = document.createElement('li');
+            adminLink.className = 'nav-item';
+            adminLink.innerHTML = '<a class="nav-link" href="#" onclick="showSection(\'admin\')">Администратор</a>';
+            document.querySelector('.navbar-nav').appendChild(adminLink);
+        });
+    </script>
+</body>
+</html>
