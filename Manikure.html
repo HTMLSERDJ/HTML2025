@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Записываемся на ноготочки</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            max-width: 390px;
+            margin: 0 auto;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 15px;
+            padding-bottom: 70px;
+        }
+        .page {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        .active-page {
+            display: block;
+        }
+        .nav-tabs {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 390px;
+            margin: 0 auto;
+            background: white;
+            border-top: 1px solid #dee2e6;
+            z-index: 1000;
+            padding: 10px 15px;
+        }
+        .nav-link {
+            color: #6c757d;
+            border: none !important;
+            text-align: center;
+        }
+        .nav-link.active {
+            color: #d63384 !important;
+            background: none !important;
+        }
+        .nav-link i {
+            display: block;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #d63384;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .form-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .btn-pink {
+            background-color: #d63384;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 50px;
+            font-weight: bold;
+        }
+        .btn-pink:hover {
+            background-color: #c22574;
+        }
+        .request-card {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s;
+        }
+        .request-card:hover {
+            transform: translateY(-5px);
+        }
+        .status-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        .new-status {
+            background: #ffc107;
+        }
+        .confirmed-status {
+            background: #198754;
+            color: white;
+        }
+        .rejected-status {
+            background: #dc3545;
+            color: white;
+        }
+        .master-card {
+            text-align: center;
+            padding: 15px;
+            border-radius: 15px;
+            background: white;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .master-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .master-card img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 10px;
+        }
+        .admin-badge {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: #d63384;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 0 0 15px 0;
+            font-size: 0.8rem;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            animation: slideDown 0.5s, fadeOut 1s 2.5s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideDown {
+            from { top: -50px; }
+            to { top: 20px; }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        .date-picker {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .date-option {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .date-option:hover, .date-option.selected {
+            background: #d63384;
+            color: white;
+            border-color: #d63384;
+        }
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .time-slot {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .time-slot:hover, .time-slot.selected {
+            background: #d63384;
+            color: white;
+            border-color: #d63384;
+        }
+        .time-slot.booked {
+            background: #e9ecef;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <!-- Навигация -->
+    <ul class="nav nav-tabs justify-content-around" id="navTabs">
+        <li class="nav-item">
+            <a class="nav-link" href="#" data-page="requests">
+                <i class="fas fa-list"></i>
+                <span>Заявки</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#" data-page="new-request">
+                <i class="fas fa-plus-circle"></i>
+                <span>Новая</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#" data-page="profile">
+                <i class="fas fa-user"></i>
+                <span>Профиль</span>
+            </a>
+        </li>
+    </ul>
+
+    <!-- Страница авторизации -->
+    <div id="login-page" class="page active-page">
+        <div class="logo">
+            <i class="fas fa-spa"></i> Ноготочки
+        </div>
+        <div class="form-container">
+            <h3 class="text-center mb-4">Вход в систему</h3>
+            <div class="mb-3">
+                <label class="form-label">Логин</label>
+                <input type="text" class="form-control" id="login-username" placeholder="Ваш логин">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Пароль</label>
+                <input type="password" class="form-control" id="login-password" placeholder="Ваш пароль">
+            </div>
+            <button class="btn btn-pink w-100 mt-3" id="login-btn">Войти</button>
+            <div class="text-center mt-3">
+                <a href="#" id="show-register">Зарегистрироваться</a>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <button class="btn btn-outline-secondary" id="admin-login-btn">
+                <i class="fas fa-lock"></i> Вход для администратора
+            </button>
+        </div>
+    </div>
+
+    <!-- Страница регистрации -->
+    <div id="register-page" class="page">
+        <div class="logo">
+            <i class="fas fa-spa"></i> Ноготочки
+        </div>
+        <div class="form-container">
+            <h3 class="text-center mb-4">Регистрация</h3>
+            <div class="mb-3">
+                <label class="form-label">ФИО</label>
+                <input type="text" class="form-control" id="register-name" placeholder="Иванова Мария Петровна">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Телефон</label>
+                <input type="tel" class="form-control" id="register-phone" placeholder="8(999)-123-45-67">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Логин</label>
+                <input type="text" class="form-control" id="register-username" placeholder="Придумайте логин">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Пароль</label>
+                <input type="password" class="form-control" id="register-password" placeholder="Не менее 3 символов">
+                <div class="form-text">Пароль должен содержать минимум 1 цифру</div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Водительское удостоверение</label>
+                <input type="text" class="form-control" id="register-license" placeholder="Серия и номер">
+            </div>
+            <button class="btn btn-pink w-100 mt-3" id="register-btn">Зарегистрироваться</button>
+            <div class="text-center mt-3">
+                <a href="#" id="show-login">Уже есть аккаунт? Войти</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Страница заявок -->
+    <div id="requests-page" class="page">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3>Мои записи</h3>
+            <button class="btn btn-pink" id="new-request-btn">
+                <i class="fas fa-plus"></i> Новая запись
+            </button>
+        </div>
+        
+        <div id="requests-list">
+            <!-- Заявки будут загружаться динамически -->
+        </div>
+    </div>
+
+    <!-- Страница создания заявки -->
+    <div id="new-request-page" class="page">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3>Новая запись</h3>
+            <button class="btn btn-outline-secondary" id="cancel-request-btn">
+                <i class="fas fa-times"></i> Отмена
+            </button>
+        </div>
+        
+        <div class="form-container">
+            <div class="mb-4">
+                <h5 class="mb-3">Выберите мастера</h5>
+                <div id="masters-list">
+                    <!-- Мастера будут загружены динамически -->
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <h5 class="mb-3">Выберите дату</h5>
+                <div class="date-picker" id="date-picker">
+                    <!-- Даты будут загружены динамически -->
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <h5 class="mb-3">Выберите время</h5>
+                <div class="time-slots" id="time-slots">
+                    <!-- Временные слоты будут загружены динамически -->
+                </div>
+            </div>
+            
+            <button class="btn btn-pink w-100 mt-3" id="submit-request-btn" disabled>
+                Записаться
+            </button>
+        </div>
+    </div>
+
+    <!-- Панель администратора -->
+    <div id="admin-page" class="page">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3>Панель администратора</h3>
+            <button class="btn btn-outline-secondary" id="admin-logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Выйти
+            </button>
+        </div>
+        
+        <div class="mb-3">
+            <div class="input-group">
+                <input type="text" class="form-control" id="admin-search" placeholder="Поиск по ФИО или телефону">
+                <button class="btn btn-pink" id="admin-search-btn">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <div class="btn-group w-100">
+                <button class="btn btn-outline-secondary filter-btn active" data-status="all">Все</button>
+                <button class="btn btn-outline-secondary filter-btn" data-status="new">Новые</button>
+                <button class="btn btn-outline-secondary filter-btn" data-status="confirmed">Подтвержденные</button>
+                <button class="btn btn-outline-secondary filter-btn" data-status="rejected">Отклоненные</button>
+            </div>
+        </div>
+        
+        <div id="admin-requests-list">
+            <!-- Заявки для администратора будут загружены динамически -->
+        </div>
+    </div>
+
+    <!-- Профиль пользователя -->
+    <div id="profile-page" class="page">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3>Мой профиль</h3>
+            <button class="btn btn-outline-secondary" id="profile-logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Выйти
+            </button>
+        </div>
+        
+        <div class="form-container">
+            <div class="text-center mb-4">
+                <div class="bg-pink rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                    <i class="fas fa-user fa-3x text-white"></i>
+                </div>
+                <h4 class="mt-3" id="profile-name">Мария Иванова</h4>
+                <p class="text-muted" id="profile-username">@mariya</p>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Телефон</label>
+                <input type="text" class="form-control" id="profile-phone" value="8(999)-123-45-67" readonly>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Водительское удостоверение</label>
+                <input type="text" class="form-control" id="profile-license" value="45AA 123456" readonly>
+            </div>
+            
+            <button class="btn btn-pink w-100 mt-4" id="edit-profile-btn">
+                Редактировать профиль
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Инициализация данных
+        const masters = [
+            { id: 1, name: "Анна Смирнова", specialty: "Маникюр, Покрытие" },
+            { id: 2, name: "Екатерина Волкова", specialty: "Наращивание, Дизайн" },
+            { id: 3, name: "Ольга Петрова", specialty: "SPA-уход, Педикюр" },
+            { id: 4, name: "Мария Сидорова", specialty: "Гель-лак, Коррекция" }
+        ];
+
+        // Текущий пользователь и состояние
+        let currentUser = null;
+        let isAdmin = false;
+        let selectedMaster = null;
+        let selectedDate = null;
+        let selectedTime = null;
+        
+        // Элементы DOM
+        const pages = document.querySelectorAll('.page');
+        const navTabs = document.querySelectorAll('.nav-link');
+        
+        // Инициализация приложения
+        document.addEventListener('DOMContentLoaded', () => {
+            // Проверка авторизации
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showPage('requests');
+                loadRequests();
+            }
+            
+            // Обработчики событий
+            setupEventListeners();
+        });
+        
+        // Настройка обработчиков событий
+        function setupEventListeners() {
+            // Навигация
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const page = link.getAttribute('data-page');
+                    showPage(page);
+                });
+            });
+            
+            // Авторизация
+            document.getElementById('login-btn').addEventListener('click', login);
+            document.getElementById('admin-login-btn').addEventListener('click', adminLogin);
+            document.getElementById('show-register').addEventListener('click', () => showPage('register'));
+            document.getElementById('show-login').addEventListener('click', () => showPage('login'));
+            
+            // Регистрация
+            document.getElementById('register-btn').addEventListener('click', register);
+            
+            // Заявки
+            document.getElementById('new-request-btn').addEventListener('click', () => {
+                showPage('new-request');
+                loadMasters();
+                initDatePicker();
+            });
+            
+            // Создание заявки
+            document.getElementById('cancel-request-btn').addEventListener('click', () => showPage('requests'));
+            document.getElementById('submit-request-btn').addEventListener('click', submitRequest);
+            
+            // Админ-панель
+            document.getElementById('admin-logout-btn').addEventListener('click', logout);
+            document.getElementById('admin-search-btn').addEventListener('click', filterAdminRequests);
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    filterAdminRequests();
+                });
+            });
+            
+            // Профиль
+            document.getElementById('profile-logout-btn').addEventListener('click', logout);
+            document.getElementById('edit-profile-btn').addEventListener('click', enableProfileEditing);
+        }
+        
+        // Показать страницу
+        function showPage(pageId) {
+            // Скрыть все страницы
+            pages.forEach(page => page.classList.remove('active-page'));
+            
+            // Показать выбранную страницу
+            document.getElementById(`${pageId}-page`).classList.add('active-page');
+            
+            // Обновить навигацию
+            navTabs.forEach(tab => tab.classList.remove('active'));
+            if (pageId !== 'login' && pageId !== 'register' && pageId !== 'admin') {
+                document.querySelector(`.nav-link[data-page="${pageId}"]`).classList.add('active');
+            }
+            
+            // Загрузить данные при необходимости
+            if (pageId === 'requests') {
+                loadRequests();
+            } else if (pageId === 'admin') {
+                loadAdminRequests();
+            } else if (pageId === 'profile' && currentUser) {
+                loadProfile();
+            }
+        }
+        
+        // Авторизация пользователя
+        function login() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            
+            // Проверка данных
+            if (!username || !password) {
+                showNotification('Заполните все поля', 'danger');
+                return;
+            }
+            
+            // Поиск пользователя
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const user = users.find(u => u.username === username && u.password === password);
+            
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                showPage('requests');
+                loadRequests();
+                showNotification('Успешный вход!', 'success');
+            } else {
+                showNotification('Неверный логин или пароль', 'danger');
+            }
+        }
+        
+        // Вход администратора
+        function adminLogin() {
+            const username = prompt('Введите логин администратора:');
+            const password = prompt('Введите пароль администратора:');
+            
+            if (username === 'beauty' && password === 'pass') {
+                isAdmin = true;
+                showPage('admin');
+                loadAdminRequests();
+                showNotification('Администратор вошел в систему', 'success');
+            } else {
+                showNotification('Неверные учетные данные администратора', 'danger');
+            }
+        }
+        
+        // Регистрация пользователя
+        function register() {
+            const fullName = document.getElementById('register-name').value;
+            const phone = document.getElementById('register-phone').value;
+            const username = document.getElementById('register-username').value;
+            const password = document.getElementById('register-password').value;
+            const license = document.getElementById('register-license').value;
+            
+            // Валидация
+            if (!fullName || !phone || !username || !password || !license) {
+                showNotification('Заполните все поля', 'danger');
+                return;
+            }
+            
+            if (!/\d/.test(password) || password.length < 3) {
+                showNotification('Пароль должен содержать цифру и быть не короче 3 символов', 'danger');
+                return;
+            }
+            
+            if (!/^8\(\d{3}\)-\d{3}-\d{2}-\d{2}$/.test(phone)) {
+                showNotification('Телефон должен быть в формате 8(XXX)-XXX-XX-XX', 'danger');
+                return;
+            }
+            
+            // Проверка уникальности логина
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            if (users.some(u => u.username === username)) {
+                showNotification('Этот логин уже занят', 'danger');
+                return;
+            }
+            
+            // Сохранение пользователя
+            const newUser = {
+                id: Date.now(),
+                fullName,
+                phone,
+                username,
+                password,
+                license
+            };
+            
+            users.push(newUser);
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            // Автоматический вход
+            currentUser = newUser;
+            localStorage.setItem('currentUser', JSON.stringify(newUser));
+            
+            showPage('requests');
+            showNotification('Регистрация прошла успешно!', 'success');
+        }
+        
+        // Загрузка заявок пользователя
+        function loadRequests() {
+            if (!currentUser) return;
+            
+            const requestsList = document.getElementById('requests-list');
+            requestsList.innerHTML = '';
+            
+            const requests = JSON.parse(localStorage.getItem('requests') || '[]');
+            const userRequests = requests.filter(r => r.userId === currentUser.id);
+            
+            if (userRequests.length === 0) {
+                requestsList.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-calendar-plus fa-3x text-muted mb-3"></i>
+                        <p>У вас пока нет записей</p>
+                        <button class="btn btn-pink" id="create-first-request">Создать первую запись</button>
+                    </div>
+                `;
+                document.getElementById('create-first-request').addEventListener('click', () => {
+                    showPage('new-request');
+                    loadMasters();
+                    initDatePicker();
+                });
+                return;
+            }
+            
+            userRequests.forEach(request => {
+                const master = masters.find(m => m.id === request.masterId);
+                const date = new Date(request.dateTime);
+                const formattedDate = date.toLocaleDateString('ru-RU', {
+                    day: 'numeric', month: 'long', year: 'numeric'
+                });
+                const formattedTime = date.toLocaleTimeString('ru-RU', {
+                    hour: '2-digit', minute: '2-digit'
+                });
+                
+                let statusClass, statusText;
+                switch(request.status) {
+                    case 'new':
+                        statusClass = 'new-status';
+                        statusText = 'Новая';
+                        break;
+                    case 'confirmed':
+                        statusClass = 'confirmed-status';
+                        statusText = 'Подтверждена';
+                        break;
+                    case 'rejected':
+                        statusClass = 'rejected-status';
+                        statusText = 'Отклонена';
+                        break;
+                }
+                
+                requestsList.innerHTML += `
+                    <div class="request-card">
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                        <h5>${master.name}</h5>
+                        <p class="mb-1"><i class="fas fa-calendar-alt"></i> ${formattedDate}</p>
+                        <p class="mb-1"><i class="fas fa-clock"></i> ${formattedTime}</p>
+                        <p class="mb-0"><i class="fas fa-info-circle"></i> ${master.specialty}</p>
+                    </div>
+                `;
+            });
+        }
+        
+        // Загрузка мастеров
+        function loadMasters() {
+            const mastersList = document.getElementById('masters-list');
+            mastersList.innerHTML = '';
+            
+            masters.forEach(master => {
+                mastersList.innerHTML += `
+                    <div class="master-card" data-id="${master.id}">
+                        <img src="https://i.pravatar.cc/150?u=${master.id}" alt="${master.name}">
+                        <h5>${master.name}</h5>
+                        <p class="text-muted">${master.specialty}</p>
+                    </div>
+                `;
+            });
+            
+            // Выбор мастера
+            document.querySelectorAll('.master-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    selectedMaster = masters.find(m => m.id === parseInt(card.dataset.id));
+                    document.querySelectorAll('.master-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    document.getElementById('submit-request-btn').disabled = !(selectedMaster && selectedDate && selectedTime);
+                });
+            });
+        }
+        
+        // Инициализация выбора даты
+        function initDatePicker() {
+            const datePicker = document.getElementById('date-picker');
+            datePicker.innerHTML = '';
+            
+            const today = new Date();
+            for (let i = 0; i < 7; i++) {
+                const date = new Date();
+                date.setDate(today.getDate() + i);
+                
+                const formattedDate = date.toLocaleDateString('ru-RU', {
+                    day: 'numeric', month: 'short', weekday: 'short'
+                });
+                
+                datePicker.innerHTML += `
+                    <div class="date-option" data-date="${date.toISOString().split('T')[0]}">
+                        ${formattedDate}
+                    </div>
+                `;
+            }
+            
+            // Выбор даты
+            document.querySelectorAll('.date-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    selectedDate = option.dataset.date;
+                    document.querySelectorAll('.date-option').forEach(o => o.classList.remove('selected'));
+                    option.classList.add('selected');
+                    loadTimeSlots();
+                    document.getElementById('submit-request-btn').disabled = !(selectedMaster && selectedDate && selectedTime);
+                });
+            });
+        }
+        
+        // Загрузка временных слотов
+        function loadTimeSlots() {
+            if (!selectedDate) return;
+            
+            const timeSlots = document.getElementById('time-slots');
+            timeSlots.innerHTML = '';
+            
+            // Получение занятых слотов
+            const requests = JSON.parse(localStorage.getItem('requests') || '[]');
+            const bookedSlots = requests
+                .filter(r => r.dateTime.startsWith(selectedDate) && 
+                            (r.status === 'new' || r.status === 'confirmed'))
+                .map(r => r.dateTime.split('T')[1].substring(0, 5));
+            
+            // Генерация слотов
+            for (let hour = 8; hour <= 18; hour++) {
+                const time = `${hour.toString().padStart(2, '0')}:00`;
+                const isBooked = bookedSlots.includes(time);
+                
+                timeSlots.innerHTML += `
+                    <div class="time-slot ${isBooked ? 'booked' : ''}" data-time="${time}">
+                        ${time}
+                    </div>
+                `;
+            }
+            
+            // Выбор времени
+            document.querySelectorAll('.time-slot:not(.booked)').forEach(slot => {
+                slot.addEventListener('click', () => {
+                    selectedTime = slot.dataset.time;
+                    document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+                    slot.classList.add('selected');
+                    document.getElementById('submit-request-btn').disabled = !(selectedMaster && selectedDate && selectedTime);
+                });
+            });
+        }
+        
+        // Создание заявки
+        function submitRequest() {
+            if (!selectedMaster || !selectedDate || !selectedTime) return;
+            
+            const dateTime = `${selectedDate}T${selectedTime}:00`;
+            
+            // Проверка доступности времени
+            const requests = JSON.parse(localStorage.getItem('requests') || '[]');
+            const isSlotAvailable = !requests.some(r => 
+                r.dateTime === dateTime && 
+                r.masterId === selectedMaster.id && 
+                (r.status === 'new' || r.status === 'confirmed')
+            );
+            
+            if (!isSlotAvailable) {
+                showNotification('Это время уже занято', 'danger');
+                return;
+            }
+            
+            // Создание заявки
+            const newRequest = {
+                id: Date.now(),
+                userId: currentUser.id,
+                masterId: selectedMaster.id,
+                dateTime,
+                status: 'new',
+                userName: currentUser.fullName,
+                userPhone: currentUser.phone
+            };
+            
+            requests.push(newRequest);
+            localStorage.setItem('requests', JSON.stringify(requests));
+            
+            // Сброс выбора
+            selectedMaster = null;
+            selectedDate = null;
+            selectedTime = null;
+            
+            showPage('requests');
+            loadRequests();
+            showNotification('Запись успешно создана!', 'success');
+        }
+        
+        // Загрузка заявок для администратора
+        function loadAdminRequests() {
+            const requestsList = document.getElementById('admin-requests-list');
+            requestsList.innerHTML = '';
+            
+            const requests = JSON.parse(localStorage.getItem('requests') || '[]');
+            const searchTerm = document.getElementById('admin-search').value.toLowerCase();
+            const statusFilter = document.querySelector('.filter-btn.active').dataset.status;
+            
+            // Фильтрация
+            const filteredRequests = requests.filter(request => {
+                const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
+                const matchesSearch = searchTerm === '' || 
+                    request.userName.toLowerCase().includes(searchTerm) ||
+                    request.userPhone.includes(searchTerm);
+                return matchesStatus && matchesSearch;
+            });
+            
+            if (filteredRequests.length === 0) {
+                requestsList.innerHTML = '<div class="text-center py-5">Заявки не найдены</div>';
+                return;
+            }
+            
+            filteredRequests.forEach(request => {
+                const master = masters.find(m => m.id === request.masterId);
+                const date = new Date(request.dateTime);
+                const formattedDate = date.toLocaleDateString('ru-RU', {
+                    day: 'numeric', month: 'long', year: 'numeric'
+                });
+                const formattedTime = date.toLocaleTimeString('ru-RU', {
+                    hour: '2-digit', minute: '2-digit'
+                });
+                
+                let statusClass, statusText;
+                switch(request.status) {
+                    case 'new':
+                        statusClass = 'new-status';
+                        statusText = 'Новая';
+                        break;
+                    case 'confirmed':
+                        statusClass = 'confirmed-status';
+                        statusText = 'Подтверждена';
+                        break;
+                    case 'rejected':
+                        statusClass = 'rejected-status';
+                        statusText = 'Отклонена';
+                        break;
+                }
+                
+                requestsList.innerHTML += `
+                    <div class="request-card">
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                        <h5>${request.userName}</h5>
+                        <p class="mb-1"><i class="fas fa-phone"></i> ${request.userPhone}</p>
+                        <p class="mb-1"><i class="fas fa-calendar-alt"></i> ${formattedDate}</p>
+                        <p class="mb-1"><i class="fas fa-clock"></i> ${formattedTime}</p>
+                        <p class="mb-0"><i class="fas fa-user-tie"></i> ${master.name}</p>
+                        
+                        <div class="mt-3 d-flex justify-content-end">
+                            ${request.status === 'new' ? `
+                                <button class="btn btn-sm btn-success me-2 confirm-btn" data-id="${request.id}">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger reject-btn" data-id="${request.id}">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // Обработчики для кнопок подтверждения/отклонения
+            document.querySelectorAll('.confirm-btn').forEach(btn => {
+                btn.addEventListener('click', () => updateRequestStatus(btn.dataset.id, 'confirmed'));
+            });
+            
+            document.querySelectorAll('.reject-btn').forEach(btn => {
+                btn.addEventListener('click', () => updateRequestStatus(btn.dataset.id, 'rejected'));
+            });
+        }
+        
+        // Фильтрация заявок в админке
+        function filterAdminRequests() {
+            loadAdminRequests();
+        }
+        
+        // Обновление статуса заявки
+        function updateRequestStatus(requestId, status) {
+            const requests = JSON.parse(localStorage.getItem('requests') || '[]');
+            const requestIndex = requests.findIndex(r => r.id === parseInt(requestId));
+            
+            if (requestIndex !== -1) {
+                requests[requestIndex].status = status;
+                localStorage.setItem('requests', JSON.stringify(requests));
+                loadAdminRequests();
+                
+                const statusText = status === 'confirmed' ? 'подтверждена' : 'отклонена';
+                showNotification(`Заявка ${statusText}`, 'success');
+            }
+        }
+        
+        // Загрузка профиля
+        function loadProfile() {
+            document.getElementById('profile-name').textContent = currentUser.fullName;
+            document.getElementById('profile-username').textContent = `@${currentUser.username}`;
+            document.getElementById('profile-phone').value = currentUser.phone;
+            document.getElementById('profile-license').value = currentUser.license;
+        }
+        
+        // Редактирование профиля
+        function enableProfileEditing() {
+            const phoneInput = document.getElementById('profile-phone');
+            const licenseInput = document.getElementById('profile-license');
+            
+            phoneInput.readOnly = false;
+            licenseInput.readOnly = false;
+            
+            const saveBtn = document.getElementById('edit-profile-btn');
+            saveBtn.textContent = 'Сохранить изменения';
+            saveBtn.removeEventListener('click', enableProfileEditing);
+            saveBtn.addEventListener('click', saveProfile);
+        }
+        
+        // Сохранение профиля
+        function saveProfile() {
+            const newPhone = document.getElementById('profile-phone').value;
+            const newLicense = document.getElementById('profile-license').value;
+            
+            // Валидация телефона
+            if (!/^8\(\d{3}\)-\d{3}-\d{2}-\d{2}$/.test(newPhone)) {
+                showNotification('Телефон должен быть в формате 8(XXX)-XXX-XX-XX', 'danger');
+                return;
+            }
+            
+            // Обновление данных
+            currentUser.phone = newPhone;
+            currentUser.license = newLicense;
+            
+            // Обновление в localStorage
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            // Обновление в списке пользователей
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const userIndex = users.findIndex(u => u.id === currentUser.id);
+            if (userIndex !== -1) {
+                users[userIndex] = currentUser;
+                localStorage.setItem('users', JSON.stringify(users));
+            }
+            
+            // Возврат в режим просмотра
+            document.getElementById('profile-phone').readOnly = true;
+            document.getElementById('profile-license').readOnly = true;
+            
+            const saveBtn = document.getElementById('edit-profile-btn');
+            saveBtn.textContent = 'Редактировать профиль';
+            saveBtn.removeEventListener('click', saveProfile);
+            saveBtn.addEventListener('click', enableProfileEditing);
+            
+            showNotification('Профиль успешно обновлен', 'success');
+        }
+        
+        // Выход из системы
+        function logout() {
+            currentUser = null;
+            isAdmin = false;
+            localStorage.removeItem('currentUser');
+            showPage('login');
+        }
+        
+        // Показать уведомление
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type} notification`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
